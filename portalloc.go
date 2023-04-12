@@ -13,14 +13,17 @@ const (
 	ErrPortIsBusy Error = "port is busy"
 )
 
+// Compilation time check for interface implementation.
+var _ error = (Error)("")
+
 // Error represents package level errors.
 type Error string
 
 func (e Error) Error() string { return string(e) }
 
-// PortAlloc tries to allocate given port.
+// Alloc tries to allocate given port.
 // Returns ErrPortIsBusy in case the port has already been allocated.
-func PortAlloc(port uint64) (p int, aErr error) {
+func Alloc(port uint64) (p int, aErr error) {
 	addr, resolveErr := net.ResolveTCPAddr("tcp", ":"+strconv.FormatUint(port, 10))
 	if resolveErr != nil {
 		return 0, fmt.Errorf("failed to resolve TCP address: %w", resolveErr)
@@ -47,4 +50,24 @@ func PortAlloc(port uint64) (p int, aErr error) {
 	}
 
 	return tcpAddr.Port, nil
+}
+
+// AllocInRange tries to allocate a port from the given range of ports.
+// Returns ErrPortIsBusy in case all ports have already been allocated.
+func AllocInRange(from, to uint64) (p int, aErr error) {
+	for i := from; i <= to; i++ {
+		p, err := Alloc(i)
+		if err != nil && !errors.Is(err, ErrPortIsBusy) {
+			return 0, err
+		}
+
+		// Lets try next port.
+		if errors.Is(err, ErrPortIsBusy) {
+			continue
+		}
+
+		return p, nil
+	}
+
+	return 0, ErrPortIsBusy
 }

@@ -7,21 +7,19 @@ import (
 	"testing"
 )
 
-func TestAllocateTCP(t *testing.T) {
+func TestPortAlloc(t *testing.T) {
 	t.Run("OK", func(t *testing.T) {
 		port := 20000
 		wantPort := 20000
 		var wantErr error = nil
 
-		got, err := PortAlloc(uint64(port))
+		got, err := Alloc(uint64(port))
 		if !reflect.DeepEqual(err, wantErr) {
-			t.Errorf("PortAlloc() error := %v, want := %v", err, wantErr)
-			return
+			t.Fatalf("Alloc() error := %v, want := %v", err, wantErr)
 		}
 
 		if got <= 0 || !reflect.DeepEqual(port, wantPort) {
-			t.Errorf("PortAlloc() got := %v expected := %v", got, wantPort)
-			return
+			t.Fatalf("Alloc() got := %v expected := %v", got, wantPort)
 		}
 	})
 
@@ -31,10 +29,59 @@ func TestAllocateTCP(t *testing.T) {
 
 		helperAlloc(t, port)
 
-		_, err := PortAlloc(uint64(port))
+		_, err := Alloc(uint64(port))
 		if !reflect.DeepEqual(err, wantErr) {
-			t.Errorf("PortAlloc() error := %v, want := %v", err, wantErr)
-			return
+			t.Fatalf("Alloc() error := %v, want := %v", err, wantErr)
+		}
+	})
+}
+
+func TestAllocInRange(t *testing.T) {
+	t.Run("First", func(t *testing.T) {
+		from := 20000
+		to := 20001
+		want := from
+		var wantErr error = nil
+
+		got, err := AllocInRange(uint64(from), uint64(to))
+		if !reflect.DeepEqual(err, wantErr) {
+			t.Fatalf("AllocInRange() error := %v, want := %v", err, wantErr)
+		}
+
+		if !reflect.DeepEqual(got, want) {
+			t.Fatalf("AllocInRange() got := %v, want := %v", got, want)
+		}
+	})
+
+	t.Run("Second", func(t *testing.T) {
+		from := 20000
+		to := 20001
+		want := to
+		var wantErr error = nil
+
+		helperAlloc(t, from)
+
+		got, err := AllocInRange(uint64(from), uint64(to))
+		if !reflect.DeepEqual(err, wantErr) {
+			t.Fatalf("AllocInRange() error := %v, want := %v", err, wantErr)
+		}
+
+		if !reflect.DeepEqual(got, want) {
+			t.Fatalf("AllocInRange() got := %v, want := %v", got, want)
+		}
+	})
+
+	t.Run("ErrPortIsBusy", func(t *testing.T) {
+		from := 20000
+		to := 20001
+		wantErr := ErrPortIsBusy
+
+		helperAlloc(t, from)
+		helperAlloc(t, to)
+
+		_, err := AllocInRange(uint64(from), uint64(to))
+		if !reflect.DeepEqual(err, wantErr) {
+			t.Fatalf("AllocInRange() error := %v, want := %v", err, wantErr)
 		}
 	})
 }
