@@ -53,5 +53,9 @@ func helperAlloc(t *testing.T, port int) {
 		t.Fatalf("failed to allocate port: %v", listenErr)
 	}
 
-	t.Cleanup(func() { l.Close() })
+	t.Cleanup(func() {
+		if err := l.Close(); err != nil {
+			t.Logf("failed to close %s", l.Addr())
+		}
+	})
 }
