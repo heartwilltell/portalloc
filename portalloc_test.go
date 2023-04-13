@@ -157,6 +157,17 @@ func BenchmarkAllocInSlice(b *testing.B) {
 	}
 }
 
+func BenchmarkAllocInRange(b *testing.B) {
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		if _, err := AllocInRange(0, 65000); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
 func helperMakePortsSlice(t testing.TB) []uint64 {
 	t.Helper()
 
