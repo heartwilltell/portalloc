@@ -1,6 +1,7 @@
 package portalloc
 
 import (
+	"errors"
 	"net"
 	"reflect"
 	"strconv"
@@ -34,10 +35,20 @@ func TestPortAlloc(t *testing.T) {
 			t.Fatalf("Alloc() error := %v, want := %v", err, wantErr)
 		}
 	})
+
+	t.Run("NetAddrError", func(t *testing.T) {
+		_, err := Alloc(100000)
+
+		var netAddErr *net.AddrError
+		if !errors.As(err, &netAddErr) {
+			t.Fatalf("Alloc() error := %v, want := %v", err, netAddErr)
+
+		}
+	})
 }
 
 func TestAllocInRange(t *testing.T) {
-	t.Run("First", func(t *testing.T) {
+	t.Run("AllocFirst", func(t *testing.T) {
 		from := 20000
 		to := 20001
 		want := []uint64{20000, 20001}
@@ -53,7 +64,7 @@ func TestAllocInRange(t *testing.T) {
 		}
 	})
 
-	t.Run("Second", func(t *testing.T) {
+	t.Run("AllocSecond", func(t *testing.T) {
 		from := 20000
 		to := 20001
 		want := []uint64{20001}
@@ -92,7 +103,7 @@ func TestAllocInRange(t *testing.T) {
 }
 
 func TestAllocInSlice(t *testing.T) {
-	t.Run("First", func(t *testing.T) {
+	t.Run("AllocFirst", func(t *testing.T) {
 		ports := []uint64{20000, 20001}
 		want := []uint64{20000, 20001}
 		var wantErr error = nil
@@ -107,7 +118,7 @@ func TestAllocInSlice(t *testing.T) {
 		}
 	})
 
-	t.Run("Second", func(t *testing.T) {
+	t.Run("AllocSecond", func(t *testing.T) {
 		ports := []uint64{20000, 20001}
 		want := []uint64{20001}
 		var wantErr error = nil
